@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ToDoアプリ</title>
+</head>
+<body>
+
+  <button onclick="sendData()">送信</button>
+
+  <script>
+    async function sendData() {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          title: 'レポートを提出する',
+          status: 'todo'
+        })
+      });
+
+      const data = await response.json();
+      console.log(data);
+    }
+  </script>
+
+</body>
+</html>

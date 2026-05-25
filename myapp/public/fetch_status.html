@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="btn">サーバーの状態を確認する</button>
+    <p id="result"></p>
+    <script>
+        document.getElementById('btn').addEventListener('click', async () => {
+            const response = await fetch('/status');
+            const data = await response.json();
+            document.getElementById('result').textContent = data.messages;
+        });
+    </script>
+</body>
+</html>
