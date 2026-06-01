@@ -74,6 +74,6 @@ app.post('/api/messages', async (req, res) => {
   res.json(result.rows[0]);
 }); 
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`サーバーが起動しました: http://localhost:${process.env.PORT || 3000}`);
+app.listen(process.env.PORT || 3036, () => {
+  console.log(`サーバーが起動しました: http://localhost:${process.env.PORT || 3036}`);
 });
