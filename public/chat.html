@@ -29,7 +29,7 @@
 
   <script>
     async function getMessages() {
-      const response = await fetch('/api/messages');
+      const response = await fetch('api/messages');
       const messages = await response.json();
       const ul = document.getElementById('messages');
       ul.innerHTML = '';
@@ -41,7 +41,7 @@
     }
 
     async function sendMessage(username, text) {
-      await fetch('/api/messages', {
+      await fetch('api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, text })
