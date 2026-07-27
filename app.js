@@ -1,32 +1,27 @@
 require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
+
 app.use(express.json());
-app.use(express.static('public'));
-app.use(express.static('frontend/dist'));
+
+// publicフォルダ
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Viteでビルドしたファイルを公開
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
 
 const pool = new Pool({
-  host:     process.env.DB_HOST,
-  port:     process.env.DB_PORT,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
   database: process.env.DB_NAME,
-  user:     process.env.DB_USER,
+  user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
 });
 
-app.get('/', (req, res) => {
-  res.send('トップページです');
-});
-
-app.get('/about', (req, res) => {
-  res.send('自己紹介ページです');
-});
-
-app.get('/time', (req, res) => {
-  const now = new Date().toLocaleString('ja-JP');
-  res.send('現在時刻：' + now);
-});
+// ==================== API ====================
 
 app.post('/api/tasks', (req, res) => {
   const { title, status } = req.body;
@@ -48,33 +43,61 @@ app.get('/api/tasks', (req, res) => {
   ]);
 });
 
-app.get('/api/test',(req,res) => {
-  res.json({ message: 'APIが動いています', status: 'ok' });
+app.get('/api/test', (req, res) => {
+  res.json({
+    message: 'APIが動いています',
+    status: 'ok'
+  });
 });
 
 app.get('/status', (req, res) => {
-  res.json({ status: 'ok', messages: 'サーバーが動いています' });
+  res.json({
+    status: 'ok',
+    message: 'サーバーが動いています'
+  });
 });
-
-const messages = [];
 
 app.get('/api/messages', async (req, res) => {
-  const result = await pool.query(
-    'SELECT * FROM messages ORDER BY created_at ASC'
-  );
-  res.json(result.rows);
+  try {
+    const result = await pool.query(
+      'SELECT * FROM messages ORDER BY created_at ASC'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'データ取得エラー' });
+  }
 });
 
-
 app.post('/api/messages', async (req, res) => {
-  const { username, text } = req.body;
-  const result = await pool.query(
-    'INSERT INTO messages (username, text) VALUES ($1, $2) RETURNING *',
-    [username, text]
-  );
-  res.json(result.rows[0]);
-}); 
+  try {
+    const { username, text } = req.body;
 
-app.listen(process.env.PORT || 3036, () => {
-  console.log(`サーバーが起動しました: http://localhost:${process.env.PORT || 3036}`);
+    const result = await pool.query(
+      'INSERT INTO messages (username, text) VALUES ($1, $2) RETURNING *',
+      [username, text]
+    );
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'データ登録エラー' });
+  }
+});
+
+// ==================== React(Vite) ====================
+
+// API以外のアクセスはすべてReactへ渡す
+app.use((req, res) => {
+  res.sendFile(
+    path.join(__dirname, '..', 'frontend', 'dist', 'index.html')
+  );
+});
+
+// ==================== Server ====================
+
+const PORT = process.env.PORT || 3036;
+
+app.listen(PORT, () => {
+  console.log(`サーバーが起動しました: http://localhost:${PORT}`);
 });
