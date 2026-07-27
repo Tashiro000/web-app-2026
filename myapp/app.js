@@ -7,8 +7,11 @@ const app = express();
 
 app.use(express.json());
 
+// publicフォルダ
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Viteでビルドしたファイルを公開
-app.use(express.static(path.join(__dirname, 'frontend', 'dist')));
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -85,13 +88,15 @@ app.post('/api/messages', async (req, res) => {
 // ==================== React(Vite) ====================
 
 // API以外のアクセスはすべてReactへ渡す
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'dist', 'index.html'));
+app.use((req, res) => {
+  res.sendFile(
+    path.join(__dirname, '..', 'frontend', 'dist', 'index.html')
+  );
 });
 
 // ==================== Server ====================
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3036;
 
 app.listen(PORT, () => {
   console.log(`サーバーが起動しました: http://localhost:${PORT}`);
