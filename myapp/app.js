@@ -7,11 +7,16 @@ const app = express();
 
 app.use(express.json());
 
+// サブディレクトリ（/s36）配下とルートの両方で静的ファイル・APIが動くように設定
+const router = express.Router();
+
+router.use(express.json());
+
 // publicフォルダ
-app.use(express.static(path.join(__dirname, 'public')));
+router.use(express.static(path.join(__dirname, 'public')));
 
 // Viteでビルドしたファイルを公開
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
+router.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -23,17 +28,14 @@ const pool = new Pool({
 
 // ==================== API ====================
 
-app.post('/api/tasks', (req, res) => {
+router.post('/api/tasks', (req, res) => {
   const { title, status } = req.body;
-
   const newTask = { title, status };
-
   console.log(newTask);
-
   res.json(newTask);
 });
 
-app.get('/api/tasks', (req, res) => {
+router.get('/api/tasks', (req, res) => {
   res.json([
     {
       id: 1,
@@ -43,21 +45,21 @@ app.get('/api/tasks', (req, res) => {
   ]);
 });
 
-app.get('/api/test', (req, res) => {
+router.get('/api/test', (req, res) => {
   res.json({
     message: 'APIが動いています',
     status: 'ok'
   });
 });
 
-app.get('/status', (req, res) => {
+router.get('/status', (req, res) => {
   res.json({
     status: 'ok',
     message: 'サーバーが動いています'
   });
 });
 
-app.get('/api/messages', async (req, res) => {
+router.get('/api/messages', async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT * FROM messages ORDER BY created_at ASC'
@@ -69,15 +71,13 @@ app.get('/api/messages', async (req, res) => {
   }
 });
 
-app.post('/api/messages', async (req, res) => {
+router.post('/api/messages', async (req, res) => {
   try {
     const { username, text } = req.body;
-
     const result = await pool.query(
       'INSERT INTO messages (username, text) VALUES ($1, $2) RETURNING *',
       [username, text]
     );
-
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -88,11 +88,15 @@ app.post('/api/messages', async (req, res) => {
 // ==================== React(Vite) ====================
 
 // API以外のアクセスはすべてReactへ渡す
-app.use((req, res) => {
+router.use((req, res) => {
   res.sendFile(
     path.join(__dirname, '..', 'frontend', 'dist', 'index.html')
   );
 });
+
+// /s36 配下でも、ルート( / )でも両方対応できるようにルーターを割り当て
+app.use('/s36', router);
+app.use('/', router);
 
 // ==================== Server ====================
 
