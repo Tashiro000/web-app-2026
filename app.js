@@ -5,6 +5,7 @@ const { Pool } = require('pg');
 const app = express();
 app.use(express.json());
 app.use(express.static('public'));
+app.use(express.static('frontend/dist'));
 
 const pool = new Pool({
   host:     process.env.DB_HOST,
